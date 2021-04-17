@@ -1,8 +1,17 @@
+import argparse
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-img_rgb = cv2.imread('./../images/c130someairportRotate_small.bmp')
+ap = argparse.ArgumentParser()
+ap.add_argument("-s", "--source", required=False, help="Path to source image.")
+args = vars(ap.parse_args())
+
+input_path = './../images/c130someairportRotate_small.bmp'
+if args["source"] is not None:
+    input_path = args["source"]
+
+img_rgb = cv2.imread(input_path)
 
 img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
 img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
