@@ -16,6 +16,8 @@ def read_points(fname):
     file = open(fname, 'r')
     Lines = file.readlines()
 
+    file.close()
+
     count = 0
     # Strips the newline character
     for line in Lines:
@@ -26,10 +28,22 @@ def read_points(fname):
 
     return np.reshape(points, (len(points), 1, 2))
 
+
+def save_matrix(fpath, matrix, dcoeffs, saveTXT=True):
+    np.savez(fpath, CameraMatrix=matrix, DistCoeffs=dcoeffs)
+    if saveTXT:
+        f = open(fpath, 'w')
+    #for i in range(3): # ToDo: implement 3 mtrixes case writting!
+        f.write("%s\n" % matrix)
+        f.write("%s\n" % dcoeffs)
+        f.close()
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-s", "--source", required=False, help="Path to source images.")
 ap.add_argument("-p", "--points", required=False, help="Path to precalculated corresponding points.")
 ap.add_argument("-i", "--image", required=False, help="Path to image to apply undistort methods.")
+ap.add_argument("-o", "--output", required=False, help="Path to output file with camera matrix and distortion coefficients.")
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -74,6 +88,8 @@ if args["source"] is not None:
                 #break
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
     cv.destroyAllWindows()
+    if args["output"] is not None:
+        save_matrix(args["output"], mtx, dist)
 
 
 # Load precalculated corresponding points
@@ -92,6 +108,8 @@ if args["points"] is not None:
         img = cv.imread(input_image_path)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        if args["output"] is not None:
+            save_matrix(args["output"], mtx, dist)
 
 
 if args["image"] is not None:
