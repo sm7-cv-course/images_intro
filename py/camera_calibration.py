@@ -108,8 +108,10 @@ if args["points"] is not None:
         img = cv.imread(input_image_path)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
         ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        h, w = img.shape[:2]
+        newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
         if args["output"] is not None:
-            save_matrix(args["output"], mtx, dist)
+            save_matrix(args["output"], newcameramtx, dist)
 
 
 if args["image"] is not None:
@@ -118,6 +120,9 @@ if args["image"] is not None:
     img = cv.imread(input_image_path)
     h, w = img.shape[:2]
     newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
+
+    if args["output"] is not None:
+        save_matrix(args["output"], newcameramtx, dist)
 
     # undistort
     dst = cv.undistort(img, mtx, dist, None, newcameramtx)
