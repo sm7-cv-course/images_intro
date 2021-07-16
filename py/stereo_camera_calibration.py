@@ -39,6 +39,7 @@ def get_images_sub_paths(folder_path):
     images = glob.glob(folder_path + '/*.jpg')
     images.extend(glob.glob(folder_path + '/*.png'))
     images.extend(glob.glob(folder_path + '/*.tiff'))
+    images.extend(glob.glob(folder_path + '/*.tif'))
     images.extend(glob.glob(folder_path + '/*.gif'))
     images.extend(glob.glob(folder_path + '/*.jpeg'))
     return images

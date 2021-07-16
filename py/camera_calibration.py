@@ -63,6 +63,7 @@ if args["source"] is not None:
     images = glob.glob(input_path + '/*.jpg')
     images.extend(glob.glob(input_path + '/*.png'))
     images.extend(glob.glob(input_path + '/*.tiff'))
+    images.extend(glob.glob(input_path + '/*.tif'))
     images.extend(glob.glob(input_path + '/*.gif'))
     images.extend(glob.glob(input_path + '/*.jpeg'))
 
