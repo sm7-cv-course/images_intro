@@ -8,6 +8,7 @@ import glob
 #bsize = (8, 5)
 #bsize = (7, 7)
 bsize = (7, 4)
+scale = 0.5
 
 def read_points(fname):
     points = []
@@ -29,6 +30,15 @@ def read_points(fname):
     return np.reshape(points, (len(points), 1, 2))
 
 
+def save_points(filepath, pts):
+    fp = open(filepath, 'w')
+
+    for pt in pts:
+        fp.write("{},{}\n".format(pt[0][0], pt[0][1]))
+
+    fp.close()
+
+
 def save_matrix(fpath, matrix, dcoeffs, saveTXT=True):
     np.savez(fpath, CameraMatrix=matrix, DistCoeffs=dcoeffs)
     if saveTXT:
@@ -44,6 +54,7 @@ ap.add_argument("-s", "--source", required=False, help="Path to source images.")
 ap.add_argument("-p", "--points", required=False, help="Path to precalculated corresponding points.")
 ap.add_argument("-i", "--image", required=False, help="Path to image to apply undistort methods.")
 ap.add_argument("-o", "--output", required=False, help="Path to output file with camera matrix and distortion coefficients.")
+ap.add_argument("-w", "--write", required=False, help="Path to folder to write found corner points.")
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -83,10 +94,16 @@ if args["source"] is not None:
             imgpoints.append(corners)
             # Draw and display the corners
             cv.drawChessboardCorners(img, bsize, corners2, ret)
-            #cv.imshow('img', img)
-            #key = cv.waitKey(500) & 0xFF
-            #if key == ord("q"):
-                #break
+            img_small = cv.resize(img, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
+            cv.imshow('img', img_small)
+            key = cv.waitKey(500) & 0xFF
+            if key == ord("q"):
+                break
+            # Save found corners points if needed
+            if args["write"] is not None:
+                ppath = args["write"] + '/' + fname.split('/')[-1].split(".")[0] + '.txt'
+                save_points(ppath, corners)
+
     ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
     cv.destroyAllWindows()
     if args["output"] is not None:
