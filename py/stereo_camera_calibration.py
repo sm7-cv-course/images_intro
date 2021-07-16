@@ -35,6 +35,15 @@ def read_camera_matrix(fpath):
         return matrix, coeffs
 
 
+def get_images_sub_paths(folder_path):
+    images = glob.glob(folder_path + '/*.jpg')
+    images.extend(glob.glob(folder_path + '/*.png'))
+    images.extend(glob.glob(folder_path + '/*.tiff'))
+    images.extend(glob.glob(folder_path + '/*.gif'))
+    images.extend(glob.glob(folder_path + '/*.jpeg'))
+    return images
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-l", "--left", required=True, help="Path to precalculated points from left images.")
 ap.add_argument("-r", "--right", required=True, help="Path to precalculated points from right images.")
@@ -42,6 +51,8 @@ ap.add_argument("-m", "--matrixLeft", required=True, help="Path to camera matrix
 ap.add_argument("-n", "--matrixRight", required=True, help="Path to camera matrix and distortion coefficients for right camera.")
 ap.add_argument("-i", "--limage", required=True, help="Path to left image to apply undistort methods.")
 ap.add_argument("-j", "--rimage", required=True, help="Path to right image to apply undistort methods.")
+ap.add_argument("-p", "--lsource", required=True, help="Path to folder with all left images.")
+ap.add_argument("-q", "--rsource", required=True, help="Path to folder with all right images.")
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -116,6 +127,42 @@ map1_l, map2_l = cv.initUndistortRectifyMap(cameraMatrix1, distCoeffs1, R1, P1,
                                                  (width,height), cv.CV_16SC2)
 map1_r, map2_r  = cv.initUndistortRectifyMap(cameraMatrix2, distCoeffs2, R2, P2,
                                                        (width,height), cv.CV_16SC2)
+
+# Show points on images
+if args["lsource"] is not None and args["rsource"] is not None:
+    input_path = args["lsource"]
+    l_images = get_images_sub_paths(input_path)
+    input_path = args["rsource"]
+    r_images = get_images_sub_paths(input_path)
+    l_images.sort()
+    r_images.sort()
+    count = 0
+    for l_imageName, r_imageName in zip(l_images, r_images):
+        print(l_imageName, r_imageName)
+        img_l = cv.imread(l_imageName)
+        img_r = cv.imread(r_imageName)
+        #gray_l = cv.cvtColor(img_l, cv.COLOR_BGR2GRAY)
+        #gray_r = cv.cvtColor(img_r, cv.COLOR_BGR2GRAY)
+        #l_small = cv.resize(gray_l, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
+        #r_small = cv.resize(gray_r, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
+        vis = cv.hconcat([img_l, img_r])
+
+        for pt_l, pt_r in zip(imgpoints_l[count], imgpoints_r[count]):
+            new_pt_r = pt_r + (gray_l.shape[1], 0)
+            vis = cv.line(vis, (int(pt_l[0][0]), int(pt_l[0][1])),\
+             (int(new_pt_r[0][0]), int(new_pt_r[0][1])), (0, 255, 0), thickness=1)
+
+        vis_small = cv.resize(vis, None, fx=scale, fy=scale, interpolation=cv.INTER_CUBIC)
+        cv.imshow('vis', vis_small);
+        #cv.imshow('l_small', l_small);
+        #cv.imshow('r_small', r_small);
+        key = cv.waitKey(5) & 0xFF
+        if key == ord("q"):
+            break
+        count = count + 1
+        if count >= len(imgpoints_l):
+            break
+
 
 img_left = cv.remap(gray_l, map1_l, map2_l, cv.cv2.INTER_LINEAR);
 img_right = cv.remap(gray_r, map1_r, map2_r, cv.cv2.INTER_LINEAR)
