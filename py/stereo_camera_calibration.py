@@ -6,9 +6,19 @@ import glob
 
 # Number of intricics corners. Important: must be 1 odd and 1 even number!
 #bsize = (8, 5)
-bsize = (7, 7)
-#bsize = (7, 4)
+#bsize = (7, 7)
+bsize = (7, 4)
 scale=0.25
+colorScheme = 'optimized'
+
+# Anaglyph convertion matrices
+mixMatrices = {
+'true': [ [ 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 0, 0, 0.299, 0.587, 0.114 ] ],
+'mono': [ [ 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 0.299, 0.587, 0.114, 0.299, 0.587, 0.114 ] ],
+'color': [ [ 1, 0, 0, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0, 1 ] ],
+'halfcolor': [ [ 0.299, 0.587, 0.114, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0, 1 ] ],
+'optimized': [ [ 0, 0.7, 0.3, 0, 0, 0, 0, 0, 0 ], [ 0, 0, 0, 0, 1, 0, 0, 0, 1 ] ],
+}
 
 def read_points(fname):
     points = []
@@ -55,6 +65,7 @@ ap.add_argument("-j", "--rimage", required=True, help="Path to right image to ap
 ap.add_argument("-p", "--lsource", required=True, help="Path to folder with all left images.")
 ap.add_argument("-q", "--rsource", required=True, help="Path to folder with all right images.")
 ap.add_argument("-o", "--output", required=False, help="Path to output folder (rectified stereo pair).")
+ap.add_argument("-a", "--anaglyph", required=False, help="Create anaglyph image", action='store_true')
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -176,6 +187,25 @@ cv.imshow('right', right_small);
 if args["output"] is not None:
     cv.imwrite(args["output"] + "/rectified_l.png", img_left)
     cv.imwrite(args["output"] + "/rectified_r.png", img_right)
+
+# Create anaglyph
+if args["anaglyph"]:
+    if len(img_left.shape) == 2:
+        resultArray = np.zeros((img_left.shape[0],img_left.shape[1],3))
+        m = mixMatrices[colorScheme]
+        resultArray[:,:,0] = img_left*m[0][6] + img_left*m[0][7] + img_left*m[0][8] + img_right*m[1][6] + img_right*m[1][7] + img_right*m[1][8]
+        resultArray[:,:,1] = img_left*m[0][3] + img_left*m[0][4] + img_left*m[0][5] + img_right*m[1][3] + img_right*m[1][4] + img_right*m[1][5]
+        resultArray[:,:,2] = img_left*m[0][0] + img_left*m[0][1] + img_left*m[0][2] + img_right*m[1][0] + img_right*m[1][1] + img_right*m[1][2]
+    if len(img_left.shape) > 2:
+        lb,lg,lr = cv2.split(np.asarray(img_left[:,:]))
+        rb,rg,rr = cv2.split(np.asarray(img_right[:,:]))
+        resultArray = np.asarray(result[:,:])
+        m = mixMatrices[colorScheme]
+        resultArray[:,:,0] = lb*m[0][6] + lg*m[0][7] + lr*m[0][8] + rb*m[1][6] + rg*m[1][7] + rr*m[1][8]
+        resultArray[:,:,1] = lb*m[0][3] + lg*m[0][4] + lr*m[0][5] + rb*m[1][3] + rg*m[1][4] + rr*m[1][5]
+        resultArray[:,:,2] = lb*m[0][0] + lg*m[0][1] + lr*m[0][2] + rb*m[1][0] + rg*m[1][1] + rr*m[1][2]
+    if args["output"] is not None:
+        cv.imwrite(args["output"] + "/anaglyph.png", resultArray)
 
 key = cv.waitKey(50000) & 0xFF
 if key == ord("q"):
