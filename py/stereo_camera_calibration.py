@@ -54,6 +54,7 @@ ap.add_argument("-i", "--limage", required=True, help="Path to left image to app
 ap.add_argument("-j", "--rimage", required=True, help="Path to right image to apply undistort methods.")
 ap.add_argument("-p", "--lsource", required=True, help="Path to folder with all left images.")
 ap.add_argument("-q", "--rsource", required=True, help="Path to folder with all right images.")
+ap.add_argument("-o", "--output", required=False, help="Path to output folder (rectified stereo pair).")
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -172,72 +173,12 @@ right_small = cv.resize(img_right, None, fx=scale, fy=scale, interpolation=cv.IN
 cv.imshow('left', left_small);
 cv.imshow('right', right_small);
 
+if args["output"] is not None:
+    cv.imwrite(args["output"] + "/rectified_l.png", img_left)
+    cv.imwrite(args["output"] + "/rectified_r.png", img_right)
+
 key = cv.waitKey(50000) & 0xFF
 if key == ord("q"):
     cv.destroyAllWindows()
 
 cv.destroyAllWindows()
-#double cv::stereoCalibrate	(	InputArrayOfArrays 	objectPoints,
-#InputArrayOfArrays 	imagePoints1,
-#InputArrayOfArrays 	imagePoints2,
-#InputOutputArray 	cameraMatrix1,
-#InputOutputArray 	distCoeffs1,
-#InputOutputArray 	cameraMatrix2,
-#InputOutputArray 	distCoeffs2,
-#Size 	imageSize,
-#InputOutputArray 	R,
-#InputOutputArray 	T,
-#OutputArray 	E,
-#OutputArray 	F,
-#OutputArray 	perViewErrors,
-#int 	flags = CALIB_FIX_INTRINSIC,
-#TermCriteria 	criteria = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 1e-6)
-#)
-
-
-#if args["image"] is not None:
-#    img = cv.imread(args["image"])
-#    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-#    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-
-#    # Estimate Error
-#    h, w = img.shape[:2]
-#    newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
-
-#    # undistort
-#    dst = cv.undistort(img, mtx, dist, None, newcameramtx)
-#    # crop the image
-#    x, y, w, h = roi
-#    dst = dst[y:y + h, x:x + w]
-#    cv.imwrite('calibresult.png', dst)
-
-#    # undistort - II
-#    mapx, mapy = cv.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w, h), 5)
-#    dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
-#    # crop the image
-#    x, y, w, h = roi
-#    dst = dst[y:y + h, x:x + w]
-#    cv.imwrite('calibresult2.png', dst)
-
-#    mean_error = 0
-#    for i in range(len(objpoints)):
-#        imgpoints2, _ = cv.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
-#        error = cv.norm(imgpoints[i], imgpoints2, cv.NORM_L2) / len(imgpoints2)
-#        mean_error += error
-#    print("total error: {}".format(mean_error/len(objpoints)))
-
-
-#def read_camera_matrix(fpath)
-#    file = open(fname, 'r')
-#    Lines = file.readlines()
-
-#    matrix =  []
-#    count = 0
-#    # Strips the newline character
-#    for line in Lines:
-#        if i < 3:
-#            pts = line.split(',')
-#            matrix.append([np.float32(pts[0]), np.float32(pts[1]), np.float32(pts[2])])
-#        else:
-#            dcoeffs = [np.float32(pts[0]), np.float32(pts[1]), np.float32(pts[2])]
-#        count += 1
