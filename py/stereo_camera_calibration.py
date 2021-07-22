@@ -45,6 +45,11 @@ def get_images_sub_paths(folder_path):
     return images
 
 
+def save_matrix(fpath, R, T, R1, R2, P1, P2, Q, map1_l, map2_l, map1_r, map2_r):
+    np.savez(fpath, RotMatrix=R, Tvector=T, Rot1=R1, Rot2=R2, Proj1=P1, Proj2=P2,\
+             DispToDepth=Q, Map1L=map1_l, Map2L=map2_l, Map1R=map1_r, Map2R=map2_r)
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-l", "--left", required=True, help="Path to precalculated points from left images.")
 ap.add_argument("-r", "--right", required=True, help="Path to precalculated points from right images.")
@@ -55,6 +60,7 @@ ap.add_argument("-j", "--rimage", required=True, help="Path to right image to ap
 ap.add_argument("-p", "--lsource", required=True, help="Path to folder with all left images.")
 ap.add_argument("-q", "--rsource", required=True, help="Path to folder with all right images.")
 ap.add_argument("-o", "--output", required=False, help="Path to output folder (rectified stereo pair).")
+ap.add_argument("-s", "--saveproj", required=False, help="Path to output file for estimated rectification maps, projection matrices, translation vectors and disparity to depth matrix.")
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -129,6 +135,10 @@ map1_l, map2_l = cv.initUndistortRectifyMap(cameraMatrix1, distCoeffs1, R1, P1,
                                                  (width,height), cv.CV_16SC2)
 map1_r, map2_r  = cv.initUndistortRectifyMap(cameraMatrix2, distCoeffs2, R2, P2,
                                                        (width,height), cv.CV_16SC2)
+
+if args["saveproj"] is not None:
+    save_matrix(args["saveproj"], R, T, R1, R2, P1, P2, Q, map1_l, map2_l, map1_r, map2_r)
+
 
 # Show points on images
 if args["lsource"] is not None and args["rsource"] is not None:

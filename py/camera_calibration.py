@@ -43,7 +43,7 @@ def save_matrix(fpath, matrix, dcoeffs, saveTXT=True):
     np.savez(fpath, CameraMatrix=matrix, DistCoeffs=dcoeffs)
     if saveTXT:
         f = open(fpath, 'w')
-    #for i in range(3): # ToDo: implement 3 mtrixes case writting!
+    #for i in range(3): # ToDo: implement 3 matrices case writting!
         f.write("%s\n" % matrix)
         f.write("%s\n" % dcoeffs)
         f.close()

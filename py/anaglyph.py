@@ -5,8 +5,8 @@ import glob
 
 scale=0.25
 colorScheme = 'optimized'
-BaseShift = 420
-AnaglyphShift = 20
+BaseShift = 455
+AnaglyphShift = 15
 
 # Anaglyph convertion matrices
 #https://github.com/miguelgrinberg/anaglyph.py/blob/master/anaglyph.py
