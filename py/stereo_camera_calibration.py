@@ -6,8 +6,8 @@ import glob
 
 # Number of intricics corners. Important: must be 1 odd and 1 even number!
 #bsize = (8, 5)
-bsize = (7, 7)
-#bsize = (7, 4)
+#bsize = (7, 7)
+bsize = (7, 4)
 scale=0.25
 
 def read_points(fname):
@@ -45,9 +45,12 @@ def get_images_sub_paths(folder_path):
     return images
 
 
-def save_matrix(fpath, R, T, R1, R2, P1, P2, Q, map1_l, map2_l, map1_r, map2_r):
+def save_matrix(fpath, R, T, R1, R2, P1, P2, Q, map1_l, map2_l, map1_r, map2_r,\
+                cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, validPixROI1, validPixROI2):
     np.savez(fpath, RotMatrix=R, Tvector=T, Rot1=R1, Rot2=R2, Proj1=P1, Proj2=P2,\
-             DispToDepth=Q, Map1L=map1_l, Map2L=map2_l, Map1R=map1_r, Map2R=map2_r)
+             DispToDepth=Q, Map1L=map1_l, Map2L=map2_l, Map1R=map1_r, Map2R=map2_r,\
+             cM1=cameraMatrix1, dC1=distCoeffs1, cM2=cameraMatrix2, dC2=distCoeffs2,\
+             ROI1=validPixROI1, ROI2=validPixROI2)
 
 
 ap = argparse.ArgumentParser()
@@ -136,8 +139,10 @@ map1_l, map2_l = cv.initUndistortRectifyMap(cameraMatrix1, distCoeffs1, R1, P1,
 map1_r, map2_r  = cv.initUndistortRectifyMap(cameraMatrix2, distCoeffs2, R2, P2,
                                                        (width,height), cv.CV_16SC2)
 
+# ToDo: use cv.FileStorage and .yml format
 if args["saveproj"] is not None:
-    save_matrix(args["saveproj"], R, T, R1, R2, P1, P2, Q, map1_l, map2_l, map1_r, map2_r)
+    save_matrix(args["saveproj"], R, T, R1, R2, P1, P2, Q, map1_l, map2_l, map1_r,\
+                map2_r, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, validPixROI1, validPixROI2)
 
 
 # Show points on images
