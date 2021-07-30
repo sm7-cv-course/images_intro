@@ -95,9 +95,31 @@ def read_all_matrices(fpath):
 
         return R,T,R1,R2,P1,P2,Q,map1_l,map2_l,map1_r,map2_r
 
+
+def write_ply(fn, verts, colors):
+    ply_header = '''ply
+format ascii 1.0
+element vertex %(vert_num)d
+property float x
+property float y
+property float z
+property uchar red
+property uchar green
+property uchar blue
+end_header
+'''
+    verts = verts.reshape(-1, 3)
+    colors = colors.reshape(-1, 3)
+    verts = np.hstack([verts, colors])
+    with open(fn, 'wb') as f:
+        f.write((ply_header % dict(vert_num=len(verts))).encode('utf-8'))
+        np.savetxt(f, verts, fmt='%f %f %f %d %d %d ')
+
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-a", "--allpoints", required=True, help="Path to all precalculated points from both left and right images.")
 ap.add_argument("-q", "--loadDepthMatrix", required=True, help="Path to file with all matrices.")
+ap.add_argument("-p", "--ply", required=False, help="Path to folder with output *.ply files.")
 args = vars(ap.parse_args())
 
 
@@ -131,6 +153,12 @@ if args["allpoints"] is not None:
         allXYZ1.append(XYZ1)
         ax.scatter(XYZ1[0],XYZ1[1],XYZ1[2])
         plt.pause(0.05)
+        if args["ply"] is not None:
+            out_fn = args["ply"] + '/' + fname.split('/')[-1].split('.')[0] + '.ply'
+            out_points = XYZ1[0:3, :].transpose()
+            t = 255*(XYZ1[2,:]-XYZ1[2,:].min()) / (XYZ1[2,:].max() - XYZ1[2,:].min())
+            out_colors = cv.merge((t,t,t))
+            write_ply(out_fn, out_points, out_colors)
 plt.show()
 
 
