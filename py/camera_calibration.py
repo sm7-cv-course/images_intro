@@ -55,6 +55,8 @@ ap.add_argument("-p", "--points", required=False, help="Path to precalculated co
 ap.add_argument("-i", "--image", required=False, help="Path to image to apply undistort methods.")
 ap.add_argument("-o", "--output", required=False, help="Path to output file with camera matrix and distortion coefficients.")
 ap.add_argument("-w", "--write", required=False, help="Path to folder to write found corner points.")
+
+ap.add_argument("-n", "--newobjpts", required=False, help="Path to folder to write new Object Points estimated with calibrateCameraRO.")
 args = vars(ap.parse_args())
 
 input_path = './../images/calibration'
@@ -103,8 +105,12 @@ if args["source"] is not None:
             if args["write"] is not None:
                 ppath = args["write"] + '/' + fname.split('/')[-1].split(".")[0] + '.txt'
                 save_points(ppath, corners)
-
-    ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+#    rms = calibrateCameraRO(objectPoints, imagePoints, imageSize, iFixedPoint,
+#                            cameraMatrix, distCoeffs, rvecs, tvecs, newObjPoints,
+#                            flags | CALIB_FIX_K3 | CALIB_USE_LU);
+#calibrateCameraRO(objectPoints, imagePoints, imageSize, iFixedPoint, cameraMatrix, distCoeffs[, rvecs[, tvecs[, newObjPoints[, flags[, criteria]]]]]) -> retval, cameraMatrix, distCoeffs, rvecs, tvecs, newObjPoints
+    ret, mtx, dist, rvecs, tvecs, newObjPoints = cv.calibrateCameraRO(objpoints, imgpoints, gray.shape[::-1], 6, None, None)
+    #ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
     cv.destroyAllWindows()
     if args["output"] is not None:
         save_matrix(args["output"], mtx, dist)
@@ -125,7 +131,12 @@ if args["points"] is not None:
         input_image_path = args["image"]
         img = cv.imread(input_image_path)
         gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-        ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        #ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+        ret, mtx, dist, rvecs, tvecs, newObjPoints = cv.calibrateCameraRO(objpoints, imgpoints, gray.shape[::-1], 6, None, None)
+        newObjPoints_all = []
+        ret, mtx, dist, rvecs, tvecs, newObjPoints = cv.calibrateCameraRO(objpoints, imgpoints, gray.shape[::-1], 6, mtx, dist, rvecs, tvecs, newObjPoints[0])
+        for objpoint in objpoints:
+            newObjPoints_all.append(newObjPoints[0])
         h, w = img.shape[:2]
         newcameramtx, roi = cv.getOptimalNewCameraMatrix(mtx, dist, (w, h), 1, (w, h))
         if args["output"] is not None:
@@ -159,7 +170,7 @@ if args["image"] is not None:
 
     mean_error = 0
     for i in range(len(objpoints)):
-        imgpoints2, _ = cv.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
+        imgpoints2, _ = cv.projectPoints(newObjPoints_all[i], rvecs[i], tvecs[i], mtx, dist)
         error = cv.norm(imgpoints[i], imgpoints2, cv.NORM_L2) / len(imgpoints2)
         mean_error += error
     print("total error: {}".format(mean_error/len(objpoints)))
