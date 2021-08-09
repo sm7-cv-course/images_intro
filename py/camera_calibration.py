@@ -48,6 +48,11 @@ def save_matrix(fpath, matrix, dcoeffs, saveTXT=True):
         f.write("%s\n" % dcoeffs)
         f.close()
 
+def saveMatrixYAML(path2YAML, CamMtx, DistCoeffs):
+    fs = cv.FileStorage(path2YAML, cv.FileStorage_WRITE)
+    fs.write('CameraMatrix', CamMtx)
+    fs.write('DistCoeffs', DistCoeffs)
+
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-s", "--source", required=False, help="Path to source images.")
@@ -55,6 +60,7 @@ ap.add_argument("-p", "--points", required=False, help="Path to precalculated co
 ap.add_argument("-i", "--image", required=False, help="Path to image to apply undistort methods.")
 ap.add_argument("-o", "--output", required=False, help="Path to output file with camera matrix and distortion coefficients.")
 ap.add_argument("-w", "--write", required=False, help="Path to folder to write found corner points.")
+ap.add_argument("-y", "--YAML", required=False, help="Path to output YAML file with camera matrix and distortion coefficients.")
 
 ap.add_argument("-n", "--newobjpts", required=False, help="Path to folder to write new Object Points estimated with calibrateCameraRO.")
 args = vars(ap.parse_args())
@@ -114,6 +120,9 @@ if args["source"] is not None:
     cv.destroyAllWindows()
     if args["output"] is not None:
         save_matrix(args["output"], mtx, dist)
+
+    if args["YAML"] is not None:
+        saveMatrixYAML(args["YAML"], mtx, dist)
 
 
 # Load precalculated corresponding points
